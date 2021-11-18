@@ -5,36 +5,51 @@ eleventyNavigation:
   order: 1
 ---
 
-
-<form class="search">
-  Search: <input type="text" name="q" id="search-str"></p>
-</form>
-
-<div id="results">
+<div class="search">
+  <p>Search</p>
+  <input type="text" name="q" id="search-str"></p>
 </div>
 
+<div id="comment" class="initial">
+</div>
+
+<div id="results" class="results">
+</div>
 
 <script>
 let input = document.querySelector('#search-str');
-input.addEventListener('input', async function(e) {
-  // get the search string
-  let searchString = e.target.value;
-  // get search index
-  let response = await fetch('/search.json');
-  let r = await response.json();
-  const searchIndex = r.search;
-  // get search results
-  let results = [];
-  for(let item in searchIndex ) {
-    let found = searchIndex[item].text.indexOf(searchString);
-    if(found != -1 ) {
-      results.push(searchIndex[item])
-    }
-  }
-  // limit to X and then make them show if search string is empty
-  // populate search results
+let doResults = async function(searchString) {
+  // setup output
   let output = document.querySelector('#results');
   output.innerHTML = ""; 
+  let results = [];
+
+  let comment = document.querySelector('#comment');
+  comment.innerHTML = ""; 
+
+  if (searchString) {
+    // get search index
+    let response = await fetch('/search.json');
+    let r = await response.json();
+    const searchIndex = r.search;
+    // get search results
+    for(let item in searchIndex ) {
+      let found = searchIndex[item].text.indexOf(searchString);
+      if(found != -1 ) {
+        results.push(searchIndex[item])
+      }
+    }
+  } else {
+    let response = await fetch('/search.json');
+    let r = await response.json()
+    results = r.search;
+    // empty search box
+    let p = document.createElement("p");
+    p.textContent = "Until you search, here are some random recipes"
+    comment.appendChild(p);
+  }
+  
+  // show results
   results.forEach(function(result) {
     let d = document.createElement("div");
     let a = document.createElement("a");
@@ -46,9 +61,22 @@ input.addEventListener('input', async function(e) {
     d.appendChild(i);
     output.appendChild(d);
   });
-  
-  console.log(results);
-}, false);
+}
+doResults("");
+
+let typingTimer;                //timer identifier
+let doneTypingInterval = 400;  //time in ms
+
+//on keyup, start the countdown
+input.addEventListener('keyup', () => {
+    clearTimeout(typingTimer);
+    typingTimer = setTimeout(doneTyping, doneTypingInterval);
+});
+
+//user is "finished typing," do something
+async function doneTyping () {
+  await doResults(input.value);
+}
 </script>
 
 <p>More posts can be found in <a href="{{ '/posts/' | url }}">the archive</a>.</p>

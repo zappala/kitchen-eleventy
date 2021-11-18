@@ -1,0 +1,19 @@
+---
+permalink: random.json
+---
+
+{% set randomPosts = collections.posts | getRandom9 %}
+
+{"search" : [
+
+{%- for item in randomPosts -%}
+  {
+    "url" : "{{ item.url }}",
+    "title" : "{{ item.data.title }}",
+    "image" : "{{ item.data.image }}",
+    "text" : "{{ (item.data.title + " " + item.templateContent) | squash }}"
+  }{% if not loop.last %},{% else %}{%- endif -%}
+{%- endfor -%}
+
+
+]}
